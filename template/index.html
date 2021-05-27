@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+
+    <title>FilePoint</title>
+    <meta
+      name="description"
+      content="FilePoint - File Sharing App for local use"
+    />
+    <meta name="author" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" href="css/styles.css" />
+    <!-- <link rel="stylesheet" media="screen and (min-width: 900px)" href="widescreen.css">
+    <link rel="stylesheet" media="screen and (max-width: 600px)" href="smallscreen.css"> -->
+  </head>
+
+  <body>
+    <section class="container">
+      <script src="js/scripts.js"></script>
+      <section class="sidebar-container">
+        <div class="qr-code">
+          <div class="qr-code-main-background">
+            <div class="qr-code-border">
+              <div class="qr-code-image-background">
+                <div class="qr-code-image">#####QRCODE#####</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="description">
+          <p>Scan this QRcode with your mobile phone or any QRcode scanner to get the link or go to <a href="#####LINK#####">#####LINK#####</a>.</p>
+        </div>
+      </section>
+      <section class="main-page">
+        <section class="upload-container">
+          <div class="drop-zone">
+            <div class="dir_listing">
+              <div class="dirlist">
+                #####DIRLIST#####
+              </div>
+              <div class="filelist">#####FILELIST#####</div>
+            </div>
+            <form
+              class="box"
+              method="post"
+              action=""
+              enctype="multipart/form-data"
+            >
+              <div class="box__input">
+                <strong>Choose file(s) to upload:</strong>
+                <br>
+                <input
+                  class="box__file"
+                  type="file"
+                  name="files[]"
+                  id="file"
+                  data-multiple-caption="{count} files selected"
+                  multiple
+                />
+                <br>
+                <button class="box__button" type="submit">Upload</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </section>
+    </section>
+  </body>
+</html>
