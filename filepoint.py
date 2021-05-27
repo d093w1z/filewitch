@@ -5,6 +5,7 @@ import os
 from io import BytesIO
 import html
 import urllib
+import pathlib
 import shutil
 import re
 import qrcode
@@ -61,8 +62,8 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                 f = self.send_default()
 
             elif request_url and "path" not in request_opt.keys():
-                filepath = "".join([self.output_dir,request_url])
-                # print("Requested filepath: ",os.getcwd(),filepath, request_url)
+                filepath = os.path.join(self.absolute_path, os.path.join(*request_url.split("/")))
+                print("Requested filepath: ",os.getcwd(),filepath, request_url)
                 type_guess, encoding = mimetypes.guess_type(filepath)
                 f = open(filepath,"rb")
                 content_type = type_guess
@@ -72,8 +73,8 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             elif "path" in request_opt.keys():
                 if not request_opt["path"]:
                     raise FileNotFoundError
-                filepath = request_opt["path"]
-                # print("Requested filepath from opt: ",filepath, request_opt)
+                filepath = os.path.join(self.absolute_path,request_opt["path"])
+                print("Requested filepath from opt: ",filepath, request_opt)
                 type_guess, encoding = mimetypes.guess_type(filepath)
                 f = open(filepath,"rb")
                 content_type = type_guess
@@ -81,16 +82,16 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                     content_type += "; " + encoding
         
         except FileNotFoundError:
-            print("ERROR: File not found:","".join([self.output_dir,request_url]), "requested by ", self.client_address, "not found.")
+            print("ERROR: File not found:",os.path.join(self.output_dir,request_url), "requested by ", self.client_address, "not found.")
             f = open("file-not-found.html","rb")
             response_code = 404
         except IsADirectoryError:
             if request_url and "path" not in request_opt.keys():
-                dirpath = "".join([self.output_dir, request_url])
+                dirpath = os.path.join([self.output_dir, request_url])
                 self._output_dir = request_url
             else:
                 dirpath = request_opt["path"]
-                self.prev_dir = "/".join(dirpath.split("/")[0:-1])
+                self.prev_dir = os.path.split(dirpath)[0]
                 self._output_dir = dirpath
                 # print(dirpath, self.curr_dir, self.prev_dir, self.output_dir, self._output_dir, request_opt["path"])
             print("WARN: Directory request:", dirpath, "requested by ", self.client_address)
@@ -195,16 +196,16 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         if self.link != get_link():
             self.link = get_link()
             qr.qr_generate(self.link)
-        self.all_subdirs = [dir for dir in os.listdir(self._output_dir) if os.path.isdir(self._output_dir+"/"+dir)]
-        self.all_files = [file for file in os.listdir(self._output_dir) if not os.path.isdir(self._output_dir+"/"+file)]
+        self.all_subdirs = [dir for dir in os.listdir(self._output_dir) if os.path.isdir(os.path.join(self._output_dir,dir))]
+        self.all_files = [file for file in os.listdir(self._output_dir) if not os.path.isdir(os.path.join(self._output_dir,file))]
         dirlisting = "<ul>"
         dirlisting += "<li><a href=\"?path=%s\">..</a></li>" % (self.prev_dir)
         for dir in self.all_subdirs:
-            dirlisting += "<a href=\"?path=%s/%s\"><li><b>%s</b></li></a>" % (self._output_dir,dir,dir)
+            dirlisting += "<a href=\"?path=%s\"><li><b>%s</b></li></a>" % (os.path.join(self._output_dir,dir),dir)
         dirlisting += "</ul>"
         filelisting = "<ul>"
         for file in self.all_files:
-            filelisting += "<a href=\"?path=%s/%s\" download=\"%s\"><li>%s</li></a>" % (self._output_dir,file,file,file)
+            filelisting += "<a href=\"?path=%s\" download=\"%s\"><li>%s</li></a>" % (os.path.join(self._output_dir,file),file,file)
         filelisting += "</ul>"
         dirlisting = dirlisting.encode()
         filelisting = filelisting.encode()
@@ -217,7 +218,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
 
         file_index.close()
         f.write(contents)
-        displaypath = html.escape(urllib.parse.unquote(self.nice_path))
+        # displaypath = html.escape(urllib.parse.unquote(self.nice_path))
         return f
 
     def copyfile(self, source, outputfile):
@@ -248,7 +249,8 @@ class QRHandler:
         # return self.qr
 
     def qr_print(self):
-        self.qr.print_tty()
+        # self.qr.print_tty()
+        self.qr.print_ascii()
 
     def qr_getstring(self):
         img = self.qr.make_image(image_factory=qrcode.image.svg.SvgPathImage)
