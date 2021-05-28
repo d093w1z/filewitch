@@ -20,7 +20,7 @@ mimetypes.init()
 PORT = 8010
 
 home = os.path.expanduser("~")
-os.chdir("filepoint/template")
+os.chdir("template")
 
 
 class RequestHandler(http.server.BaseHTTPRequestHandler):
