@@ -4,6 +4,7 @@ import re
 import shutil
 import socket
 import socketserver
+import urllib
 from io import BytesIO
 
 import qrcode
@@ -21,7 +22,6 @@ PORT = 8010
 
 home = os.path.expanduser("~")
 os.chdir("template")
-
 
 class RequestHandler(http.server.BaseHTTPRequestHandler):
     output_dir = "."
@@ -71,7 +71,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             elif "path" in request_opt.keys():
                 if not request_opt["path"]:
                     raise FileNotFoundError
-                request_path_formatted = request_opt["path"].split("./")[-1]
+                request_path_formatted = urllib.parse.unquote(request_opt["path"].split("./")[-1])
                 filepath = os.path.join(self.absolute_path, request_path_formatted)
                 print("Requested filepath from opt: ", filepath, request_opt)
                 type_guess, encoding = mimetypes.guess_type(filepath)
