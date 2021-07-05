@@ -168,41 +168,58 @@ html {
   text-align: center;
 }
 
+.download_div{
+  text-align: center;
+}
+
+
 .container {
   display: flex;
 }
 
-.dirlist ul,
-.filelist ul,
+.dirlist p,
+.filelist p,
 a:link,
 a:visited,
 a:active {
   color: var(--main-highlight);
 }
-.dirlist ul,
-.filelist ul {
-  list-style-type: square;
-  list-style-position: inside;
-  padding: 0 10%;
+.dirlist p,
+.filelist p {
+  /* list-style-type: square;
+  list-style-position: inside; */
+  padding: 0 5%;
 }
-.dirlist li:hover,
-.filelist li:hover {
+.dirlist p:hover,
+.filelist p:hover {
   box-shadow: 0 0 5px 3px rgba(0, 0, 0, 0.4);
   border-radius: 5px;
   background-color: var(--main-highlight);
   color: var(--main-bg-dark-color);
 }
-.dirlist li:hover a,
-.filelist li:hover a {
+.dirlist p:hover a,
+.filelist p:hover a {
   color: var(--main-bg-dark-color);
 }
-.dirlist li,
-.filelist li {
+.dirlist p,
+.filelist p {
   margin: 2px 0;
-  padding: 3px;
 }
 
 input[type="file"] {
   border: 1px;
   margin: 4px 2px;
+}
+
+.file-not-found {
+  color: var(--main-highlight);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70%;
+  height: auto;
+  padding: 10px;
+
+  box-shadow: 0 0 15px 10px rgba(0, 0, 0, 0.4);
+  border-radius: 5px;
 }

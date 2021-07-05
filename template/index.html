@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
 
-    <title>FilePoint</title>
+    <title>FileWitch</title>
     <meta
       name="description"
-      content="FilePoint - File Sharing App for local use"
+      content="FileWitch - File Sharing App for local use"
     />
     <meta name="author" content="" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="css/styles.css" />
     <!-- <link rel="stylesheet" media="screen and (min-width: 900px)" href="widescreen.css">
     <link rel="stylesheet" media="screen and (max-width: 600px)" href="smallscreen.css"> -->
-    <!-- <script src="js/scripts.js"></script> -->
+    <script src="js/scripts.js"></script>
   </head>
 
   <body>
@@ -36,12 +36,25 @@
       <section class="main-page">
         <section class="upload-container">
           <div class="drop-zone">
-            <div class="dir_listing">
-              <div class="dirlist">
-                #####DIRLIST#####
+
+              <div class="dir_listing">
+                <div class="dirlist">
+                  #####DIRLIST#####
+                </div>
+                <form method="get" action="">
+                <div class="filelist">#####FILELIST#####
+
+  <!-- <p><input type="checkbox" name="file-check" value="asdf"/><a href="?path=sdfasf" download="%s">loawi;erjfalksejflavaklwfe</a></p>
+                      <input type="checkbox" name="file-check" /> test1<br/>
+                      <input type="checkbox" name="file-check" value="abcd"/> test2<br/> -->
+                </div>
+                <div class="download_div">
+                <input type="checkbox" onClick="toggle(this)" /> Select All<br/>
+                <button class="download__button" type="submit">Download</button>
               </div>
-              <div class="filelist">#####FILELIST#####</div>
+              </form>
             </div>
+            <br>
             <form
               class="box"
               method="post"

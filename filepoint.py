@@ -5,10 +5,14 @@ import shutil
 import socket
 import socketserver
 import urllib
+import sys
 from io import BytesIO
+from zipfile import ZipFile
 
 import qrcode
 import qrcode.image.svg
+
+import traceback
 
 try:
     import lxml.etree as ET
@@ -19,19 +23,21 @@ import mimetypes
 mimetypes.init()
 
 PORT = 8010
-
+PATH = "data"
 home = os.path.expanduser("~")
-os.chdir("template")
+qr = None
+PROJPATH = None
+
 
 class RequestHandler(http.server.BaseHTTPRequestHandler):
-    output_dir = "."
-    absolute_path = os.path.abspath(output_dir)
+    output_dir = PATH
+    absolute_path = os.path.abspath("./template")
 
     home = os.path.expanduser("~")
     nice_path = absolute_path.replace(home, "~")
     _output_dir = output_dir
-    prev_dir = "."
-    curr_dir = "."
+    prev_dir = output_dir
+    curr_dir = output_dir
     all_files = []
     all_subdirs = []
     link = None
@@ -52,16 +58,18 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             request_url = request_path[0]
         if len(request_path) > 1:
             for pair in request_path[1].split("&"):
-                opt, value = pair.split("=")
-                request_opt[opt] = value
+                if pair:
+                    opt, value = pair.split("=")
+                    request_opt[opt] = value
+            print(request_opt)
         try:
-            if request_url == "/" and "path" not in request_opt.keys():
-                self._output_dir = "."
+            if request_url == "/"  and "path" not in request_opt.keys() and len(request_opt.keys())==0:
+                self._output_dir = PATH
                 f = self.send_default()
 
-            elif request_url and "path" not in request_opt.keys():
+            elif request_url and len(request_opt.keys())==0:
                 filepath = os.path.join(self.absolute_path, os.path.join(*request_url.split("/")))
-                print("Requested filepath: ", os.getcwd(), filepath, request_url)
+                print("Requested filepath: ", filepath, request_url)
                 type_guess, encoding = mimetypes.guess_type(filepath)
                 f = open(filepath, "rb")
                 content_type = type_guess
@@ -73,21 +81,38 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                     raise FileNotFoundError
                 request_path_formatted = urllib.parse.unquote(request_opt["path"].split("./")[-1])
                 filepath = os.path.join(self.absolute_path, request_path_formatted)
-                print("Requested filepath from opt: ", filepath, request_opt)
+                print("Requested filepath with path: ", filepath, request_opt)
                 type_guess, encoding = mimetypes.guess_type(filepath)
                 f = open(filepath, "rb")
                 content_type = type_guess
                 if encoding:
                     content_type += "; " + encoding
 
-        except FileNotFoundError:
+            elif len(request_opt.keys()) > 0:
+                zip = ZipFile(os.path.join(PROJPATH,self.output_dir,"download.zip"),"w")
+                for name in request_opt.keys():
+                    request_path_formatted = urllib.parse.unquote(name).split("./")[-1]
+                    filename_with_path = os.path.join(PROJPATH, request_path_formatted)
+                    zip.write(filename_with_path, os.path.basename(filename_with_path))
+                zip.close()
+                filepath = os.path.join(PROJPATH,self.output_dir, "download.zip")
+                print("Requested filepath NEW version: ", filepath, request_url)
+                type_guess, encoding = mimetypes.guess_type(filepath)
+                f = open(filepath, "rb")
+                content_type = type_guess
+                if encoding:
+                    content_type += "; " + encoding
+
+
+        except FileNotFoundError as e:
             print("ERROR: File not found:", os.path.join(self.output_dir, request_url), "requested by ",
                   self.client_address, "not found.")
+            traceback.print_exc()
             f = open("file-not-found.html", "rb")
             response_code = 404
         except (IsADirectoryError, PermissionError) as e:
             if request_url and "path" not in request_opt.keys():
-                dirpath = os.path.join([self.output_dir, request_url])
+                dirpath = os.path.join(self.output_dir, request_url)
                 self._output_dir = request_url
             else:
                 dirpath = request_opt["path"]
@@ -200,10 +225,11 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         if self.link != get_link():
             self.link = get_link()
             qr.qr_generate(self.link)
-        self.all_subdirs = [dir for dir in os.listdir(self._output_dir) if
-                            os.path.isdir(os.path.join(self._output_dir, dir))]
-        self.all_files = [file for file in os.listdir(self._output_dir) if
-                          not os.path.isdir(os.path.join(self._output_dir, file))]
+        print(os.getcwd())
+        self.all_subdirs = [dir for dir in os.listdir(os.path.join(PROJPATH,self._output_dir)) if
+                            os.path.isdir(os.path.join(PROJPATH,self._output_dir, dir))]
+        self.all_files = [file for file in os.listdir(os.path.join(PROJPATH,self._output_dir)) if
+                          not os.path.isdir(os.path.join(PROJPATH,self._output_dir, file))]
         dirlisting = "<ul>"
         dirlisting += "<li><a href=\"?path=%s\">..</a></li>" % (self.prev_dir)
         for dir in self.all_subdirs:
@@ -211,9 +237,9 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         dirlisting += "</ul>"
         filelisting = "<ul>"
         for file in self.all_files:
-            filelisting += "<a href=\"?path=%s\" download=\"%s\"><li>%s</li></a>" % (
-            "/".join([self._output_dir, file]), file, file)
-        filelisting += "</ul>"
+            filelisting += "<p><input type=\"checkbox\" name=\"%s\" /><a href=\"?path=%s\" download=\"%s\">%s</a></p>"
+            filelisting = filelisting % (
+            "/".join([self._output_dir, file]),  "/".join([self._output_dir, file]), file, file)
         dirlisting = dirlisting.encode()
         filelisting = filelisting.encode()
         contents = file_index.read()
@@ -232,7 +258,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         shutil.copyfileobj(source, outputfile)
 
 
-Handler = RequestHandler
+
 
 
 def get_link():
@@ -244,42 +270,59 @@ def get_link():
 
 
 class QRHandler:
-    qr = None
+    tmp_qr = None
 
     def __init__(self, _link):
+
+        Handler = RequestHandler
         self.qr_generate(_link)
 
     def qr_generate(self, link):
-        self.qr = qrcode.QRCode(version=1,
+        self.tmp_qr = qrcode.QRCode(version=1,
                                 error_correction=qrcode.constants.ERROR_CORRECT_L,
                                 border=4,
                                 box_size=10)
-
-        self.qr.add_data(link)
-        self.qr.make(fit=True)
+        self.tmp_qr.add_data(link)
+        self.tmp_qr.make(fit=True)
         # return self.qr
 
     def qr_print(self):
         # self.qr.print_tty()
-        self.qr.print_ascii()
+        self.tmp_qr.print_ascii()
 
     def qr_getstring(self):
-        img = self.qr.make_image(image_factory=qrcode.image.svg.SvgPathImage)
+        img = self.tmp_qr.make_image(image_factory=qrcode.image.svg.SvgPathImage)
         img.save("qr-link.svg")
         svg = img.get_image()
         qrstring = "".join(ET.tostring(svg).decode().split("\\n")).encode()
         return qrstring
 
+def main():
+    global PATH, qr, PROJPATH
+    if len(sys.argv) == 2:
 
-try:
-    with socketserver.TCPServer(("", PORT), Handler) as httpd:
-        print("Serving at port", PORT)
-        print("Type this in Browser", get_link())
-        print("or Use the following QRCode")
-        qr = QRHandler(get_link())
-        qr.qr_print()
-        httpd.serve_forever()
-except Exception as e:
-    print(e)
-except KeyboardInterrupt:
-    pass
+        tmp = sys.argv[1]
+        if ".." not in tmp:
+            PATH = tmp
+
+    if PATH not in os.listdir():
+        os.mkdir(PATH)
+    PROJPATH = os.getcwd()
+    os.chdir("template")
+
+    Handler = RequestHandler
+    try:
+        with socketserver.TCPServer(("", PORT), Handler) as httpd:
+            print("Serving at port :", PORT)
+            print("Directory :", PATH)
+            print("Type this in Browser", get_link())
+            print("or Use the following QRCode")
+            qr = QRHandler(get_link())
+            qr.qr_print()
+            httpd.serve_forever()
+    except Exception as e:
+        print(e)
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt recieved, Exiting.")
+        pass
+main()
