@@ -28,7 +28,7 @@ function changeImage() {
 }
 
 function toggle(source) {
-  checkboxes = document.getElementsByName('file-check');
+  checkboxes = document.getElementsByClassName('file-check');
   for(var i=0, n=checkboxes.length;i<n;i++) {
     checkboxes[i].checked = source.checked;
   }

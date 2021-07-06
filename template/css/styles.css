@@ -95,7 +95,7 @@ html {
   position: relative;
   height: 250px;
   width: 250px;
-  margin-top: -60%;
+  margin-top: -10vh;
 }
 
 .qr-code-image {
@@ -126,6 +126,16 @@ html {
   height: 100vh;
   color: var(--sidebar-highlight);
   background-color: var(--sidebar-bg-color);
+}
+.logo{
+  position: absolute;
+  /* padding-top: 10px; */
+  top: 10px;
+  height: 100px;
+}
+.logo img{
+  height: 100px;
+  width: 100px;
 }
 @media screen and (max-width: 600px) {
   .container {

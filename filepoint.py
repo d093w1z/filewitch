@@ -79,8 +79,8 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             elif "path" in request_opt.keys():
                 if not request_opt["path"]:
                     raise FileNotFoundError
-                request_path_formatted = urllib.parse.unquote(request_opt["path"].split("./")[-1])
-                filepath = os.path.join(self.absolute_path, request_path_formatted)
+                request_path_formatted = urllib.parse.unquote(request_opt["path"].split("./")[-1]).split("/")
+                filepath = os.path.join(PROJPATH, *request_path_formatted)
                 print("Requested filepath with path: ", filepath, request_opt)
                 type_guess, encoding = mimetypes.guess_type(filepath)
                 f = open(filepath, "rb")
@@ -91,8 +91,8 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             elif len(request_opt.keys()) > 0:
                 zip = ZipFile(os.path.join(PROJPATH,self.output_dir,"download.zip"),"w")
                 for name in request_opt.keys():
-                    request_path_formatted = urllib.parse.unquote(name).split("./")[-1]
-                    filename_with_path = os.path.join(PROJPATH, request_path_formatted)
+                    request_path_formatted = urllib.parse.unquote(name.split("./")[-1]).split("/")
+                    filename_with_path = os.path.join(PROJPATH, *request_path_formatted)
                     zip.write(filename_with_path, os.path.basename(filename_with_path))
                 zip.close()
                 filepath = os.path.join(PROJPATH,self.output_dir, "download.zip")
@@ -238,7 +238,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         dirlisting += "</ul>"
         filelisting = "<ul>"
         for file in self.all_files:
-            filelisting += "<p><input type=\"checkbox\" name=\"%s\" /><a href=\"?path=%s\" download=\"%s\">%s</a></p>"
+            filelisting += "<p><input type=\"checkbox\" class=\"file-check\" name=\"%s\" /><a href=\"?path=%s\" download=\"%s\">%s</a></p>"
             filelisting = filelisting % (
             "/".join([self._output_dir, file]),  "/".join([self._output_dir, file]), file, file)
         dirlisting = dirlisting.encode()
@@ -326,4 +326,6 @@ def main():
     except KeyboardInterrupt:
         print("KeyboardInterrupt recieved, Exiting.")
         pass
-main()
+# main()
+if __name__ == "__main__":
+    main()
