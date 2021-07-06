@@ -108,7 +108,15 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             print("ERROR: File not found:", os.path.join(self.output_dir, request_url), "requested by ",
                   self.client_address, "not found.")
             # traceback.print_exc()
-            f = open("file-not-found.html", "rb")
+            f = BytesIO()
+            file = open("file-not-found.html", "rb")
+            qrsvg = re.sub(b"fill:#000000;", b"", qr.qr_getstring())
+            contents = file.read()
+            contents = re.sub(b"#####QRCODE#####", qrsvg, contents)
+            contents = re.sub(b"#####LINK#####", get_link().encode(), contents)
+
+            file.close()
+            f.write(contents)
             response_code = 404
         except (IsADirectoryError, PermissionError) as e:
             if request_url and "path" not in request_opt.keys():
@@ -142,9 +150,12 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
 
         f = BytesIO()
         file = open("upload-status.html", "rb")
+        qrsvg = re.sub(b"fill:#000000;", b"", qr.qr_getstring())
         contents = file.read()
         contents = re.sub(b"#####STATUS#####", status, contents)
         contents = re.sub(b"#####INFO#####", info, contents)
+        contents = re.sub(b"#####QRCODE#####", qrsvg, contents)
+        contents = re.sub(b"#####LINK#####", get_link().encode(), contents)
 
         file.close()
         f.write(contents)

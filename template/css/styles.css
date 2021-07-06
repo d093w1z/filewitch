@@ -227,7 +227,7 @@ input[type="file"] {
   margin: 4px 2px;
 }
 
-.file-not-found {
+.extra-container {
   color: var(--main-highlight);
   display: flex;
   align-items: center;
