@@ -107,7 +107,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         except FileNotFoundError as e:
             print("ERROR: File not found:", os.path.join(self.output_dir, request_url), "requested by ",
                   self.client_address, "not found.")
-            traceback.print_exc()
+            # traceback.print_exc()
             f = open("file-not-found.html", "rb")
             response_code = 404
         except (IsADirectoryError, PermissionError) as e:
@@ -187,7 +187,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             if not fn:
                 return (False, "Filename not found")
             file_name = fn[0]
-            fn = os.path.join(self._output_dir, file_name)
+            fn = os.path.join(PROJPATH,self._output_dir, file_name)
             # Skip Content-Type
             line = self.rfile.readline()
             remainbytes -= len(line)
@@ -197,6 +197,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             try:
                 out = open(fn, 'wb')
             except IOError:
+                print(fn)
                 return (False, "File write failed, do you have permission to write?")
             else:
                 with out:
